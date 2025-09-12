@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cloudflare": "npm install && next build",
     "start": "next start",
     "lint": "next lint",
     "aisync-learn": "node scripts/aisync-learn.js",

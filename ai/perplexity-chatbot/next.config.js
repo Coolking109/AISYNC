@@ -11,7 +11,38 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Ignore build errors for deployment
+  // Webpack configuration for problematic packages
+  webpack: (config, { isServer }) => {
+    // Ignore problematic packages during client-side builds
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
+      };
+    }
+    
+    // Ignore specific problematic modules
+    config.externals = config.externals || [];
+    config.externals.push({
+      'speakeasy': 'speakeasy',
+      'qrcode': 'qrcode',
+      'nodemailer': 'nodemailer',
+    });
+    
+    return config;
+  },
+  // Ignore build errors temporarily
   eslint: {
     ignoreDuringBuilds: true,
   },

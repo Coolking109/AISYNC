@@ -1,0 +1,16 @@
+# Cloudflare Pages Build Configuration
+
+# Build settings
+[build]
+  command = "npm run build:cloudflare"
+  publish = ".next"
+
+# Environment settings  
+[build.environment]
+  NODE_VERSION = "18.17.1"
+  NPM_CONFIG_PRODUCTION = "false"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Functions settings
+[functions]
+  node_compat = true
