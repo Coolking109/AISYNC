@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
+// Note: This route uses Node.js packages and cannot use edge runtime
+
 
 export async function POST(request: NextRequest) {
   try {

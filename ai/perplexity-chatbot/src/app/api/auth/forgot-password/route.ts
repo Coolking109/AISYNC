@@ -4,7 +4,8 @@ import { AuthUtils } from '@/lib/auth-utils';
 import { EmailService } from '@/lib/email-service';
 import { ForgotPasswordRequest } from '@/lib/auth-types';
 
-export const runtime = 'edge';
+// Note: This route uses Node.js packages and cannot use edge runtime
+
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://coresystembots_db_user:eXBLikJoEBqJUgcA@cluster0.diplw6a.mongodb.net/perplexity-chatbot';
 

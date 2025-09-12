@@ -3,7 +3,7 @@ import { getDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { AuthUtils } from '@/lib/auth-utils';
 
-export const runtime = 'edge';
+// Note: This route uses MongoDB so cannot use edge runtime
 
 // Helper function to verify authentication
 async function verifyAuth(request: NextRequest) {
