@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LearningAI } from '@/lib/learning-ai';
 
-export const runtime = 'edge';
+// Note: Removed edge runtime to avoid build issues
 
 export async function POST(request: NextRequest) {
   try {

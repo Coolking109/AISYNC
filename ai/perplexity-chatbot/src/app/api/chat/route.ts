@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MultiModelAI } from '@/lib/multi-model-ai';
 import { ChatMessage } from '@/lib/types';
 
-export const runtime = 'edge';
+// Note: Removed edge runtime to fix build issues with AI SDKs
 
 export async function POST(request: NextRequest) {
   try {
