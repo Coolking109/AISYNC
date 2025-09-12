@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { AuthUtils } from '@/lib/auth-utils';
 import { LoginRequest, AuthResponse } from '@/lib/auth-types';
+import * as speakeasy from 'speakeasy';
+
+export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,7 +57,6 @@ export async function POST(request: NextRequest) {
       }
 
       // Verify 2FA code
-      const speakeasy = require('speakeasy');
       const verified = speakeasy.totp.verify({
         secret: user.twoFactorSecret,
         encoding: 'base32',

@@ -5,6 +5,8 @@ import { ObjectId } from 'mongodb';
 import speakeasy from 'speakeasy';
 import nodemailer from 'nodemailer';
 
+export const runtime = 'edge';
+
 // Create email transporter
 const createTransporter = () => {
   return nodemailer.createTransport({

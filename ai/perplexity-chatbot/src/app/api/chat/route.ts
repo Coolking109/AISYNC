@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MultiModelAI } from '@/lib/multi-model-ai';
 import { ChatMessage } from '@/lib/types';
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Chat API: Received request');

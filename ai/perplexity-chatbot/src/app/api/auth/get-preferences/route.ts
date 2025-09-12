@@ -3,6 +3,8 @@ import { getDatabase } from '@/lib/mongodb';
 import { AuthUtils } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
+export const runtime = 'edge';
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');

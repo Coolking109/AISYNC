@@ -3,6 +3,8 @@ import { getDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { AuthUtils } from '@/lib/auth-utils';
 
+export const runtime = 'edge';
+
 // Helper function to verify authentication
 async function verifyAuth(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');

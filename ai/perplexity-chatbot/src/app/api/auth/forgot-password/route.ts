@@ -4,6 +4,8 @@ import { AuthUtils } from '@/lib/auth-utils';
 import { EmailService } from '@/lib/email-service';
 import { ForgotPasswordRequest } from '@/lib/auth-types';
 
+export const runtime = 'edge';
+
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://coresystembots_db_user:eXBLikJoEBqJUgcA@cluster0.diplw6a.mongodb.net/perplexity-chatbot';
 
 export async function POST(request: NextRequest) {

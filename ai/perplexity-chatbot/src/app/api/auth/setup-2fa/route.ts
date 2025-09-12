@@ -5,6 +5,8 @@ import { ObjectId } from 'mongodb';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');

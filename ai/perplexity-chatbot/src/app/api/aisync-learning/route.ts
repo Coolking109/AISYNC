@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AISyncSelfLearning } from '../../../lib/ai-self-learning';
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🧠 AISync Self-Learning API endpoint called');

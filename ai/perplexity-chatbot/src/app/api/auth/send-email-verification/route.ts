@@ -4,6 +4,8 @@ import { AuthUtils } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 import nodemailer from 'nodemailer';
 
+export const runtime = 'edge';
+
 // Generate a 6-digit verification code
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();

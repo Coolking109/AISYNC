@@ -4,6 +4,8 @@ import { AuthUtils } from '@/lib/auth-utils';
 import { EmailService } from '@/lib/email-service';
 import { RegisterRequest, AuthResponse, User } from '@/lib/auth-types';
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     const { email, username, password }: RegisterRequest = await request.json();

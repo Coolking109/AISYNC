@@ -4,6 +4,8 @@ import { AuthUtils } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 import nodemailer from 'nodemailer';
 
+export const runtime = 'edge';
+
 // Create email transporter
 const createTransporter = () => {
   return nodemailer.createTransport({

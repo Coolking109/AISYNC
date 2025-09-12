@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LearningAI } from '@/lib/learning-ai';
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     const { messageId, feedback, question } = await request.json();

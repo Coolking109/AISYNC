@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EmailService } from '@/lib/email-service';
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     // Only allow in development mode
