@@ -1,0 +1,18 @@
+name = "aisyncs-org"
+compatibility_date = "2024-09-12"
+pages_build_output_dir = ".next"
+
+[build]
+command = "npm run build"
+
+[build.environment_variables]
+NODE_VERSION = "18"
+NPM_FLAGS = "--production=false"
+
+[[build.environment_variables]]
+name = "NEXT_TELEMETRY_DISABLED"
+value = "1"
+
+[[build.environment_variables]]
+name = "NEXT_PUBLIC_BASE_URL"
+value = "https://aisyncs.org"
