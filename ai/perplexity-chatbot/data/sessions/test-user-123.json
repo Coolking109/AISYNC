@@ -1,0 +1,16 @@
+[
+  {
+    "id": "session-1",
+    "title": "Test Session",
+    "messages": [
+      {
+        "id": "msg-1",
+        "content": "Hello, this is a test message",
+        "role": "user",
+        "timestamp": "2025-09-12T10:00:00.000Z"
+      }
+    ],
+    "createdAt": "2025-09-12T10:00:00.000Z",
+    "updatedAt": "2025-09-12T10:00:00.000Z"
+  }
+]
