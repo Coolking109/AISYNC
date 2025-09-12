@@ -5,8 +5,6 @@ import { ObjectId } from 'mongodb';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 
-export const runtime = 'edge';
-
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 

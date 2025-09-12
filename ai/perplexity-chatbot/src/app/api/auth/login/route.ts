@@ -4,8 +4,6 @@ import { AuthUtils } from '@/lib/auth-utils';
 import { LoginRequest, AuthResponse } from '@/lib/auth-types';
 import * as speakeasy from 'speakeasy';
 
-export const runtime = 'edge';
-
 // Note: This route uses Node.js packages (MongoDB, speakeasy) so cannot use edge runtime
 
 export async function POST(request: NextRequest) {

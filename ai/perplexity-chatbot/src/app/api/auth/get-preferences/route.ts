@@ -3,8 +3,6 @@ import { getDatabase } from '@/lib/mongodb';
 import { AuthUtils } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
-export const runtime = 'edge';
-
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 

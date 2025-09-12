@@ -4,8 +4,6 @@ import { AuthUtils } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 import nodemailer from 'nodemailer';
 
-export const runtime = 'edge';
-
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EmailService } from '@/lib/email-service';
 
-export const runtime = 'edge';
-
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 

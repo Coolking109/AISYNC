@@ -3,8 +3,6 @@ import { MongoClient } from 'mongodb';
 import { AuthUtils } from '@/lib/auth-utils';
 import { ResetPasswordRequest } from '@/lib/auth-types';
 
-export const runtime = 'edge';
-
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 

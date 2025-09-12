@@ -4,8 +4,6 @@ import { AuthUtils } from '@/lib/auth-utils';
 import { EmailService } from '@/lib/email-service';
 import { ForgotPasswordRequest } from '@/lib/auth-types';
 
-export const runtime = 'edge';
-
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 

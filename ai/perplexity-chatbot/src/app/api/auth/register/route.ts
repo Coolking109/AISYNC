@@ -4,8 +4,6 @@ import { AuthUtils } from '@/lib/auth-utils';
 import { EmailService } from '@/lib/email-service';
 import { RegisterRequest, AuthResponse, User } from '@/lib/auth-types';
 
-export const runtime = 'edge';
-
 // Note: This route uses Node.js packages (MongoDB, email service) so cannot use edge runtime
 
 export async function POST(request: NextRequest) {
