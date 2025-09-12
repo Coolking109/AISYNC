@@ -7,6 +7,15 @@ const nextConfig = {
     COHERE_API_KEY: process.env.COHERE_API_KEY,
     MISTRAL_API_KEY: process.env.MISTRAL_API_KEY,
   },
+  // Optimize for Cloudflare Pages
+  output: 'standalone',
+  images: {
+    unoptimized: true,
+  },
+  // Enable experimental features for better edge compatibility
+  experimental: {
+    runtime: 'experimental-edge',
+  },
 }
 
 module.exports = nextConfig
