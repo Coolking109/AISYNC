@@ -6,6 +6,10 @@ import { ObjectId } from 'mongodb';
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function DELETE(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');

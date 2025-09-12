@@ -3,6 +3,10 @@ import { LearningAI } from '@/lib/learning-ai';
 
 // Note: Removed edge runtime to avoid build issues
 
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { messageId, feedback, question } = await request.json();

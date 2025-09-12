@@ -8,6 +8,10 @@ import nodemailer from 'nodemailer';
 
 
 // Create email transporter
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 const createTransporter = () => {
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',

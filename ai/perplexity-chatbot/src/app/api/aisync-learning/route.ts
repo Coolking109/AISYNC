@@ -4,6 +4,10 @@ import { AISyncSelfLearning } from '../../../lib/ai-self-learning';
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🧠 AISync Self-Learning API endpoint called');

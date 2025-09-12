@@ -6,6 +6,10 @@ import { RegisterRequest, AuthResponse, User } from '@/lib/auth-types';
 
 // Note: This route uses Node.js packages (MongoDB, email service) so cannot use edge runtime
 
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { email, username, password }: RegisterRequest = await request.json();

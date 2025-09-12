@@ -3,6 +3,9 @@ import { getDatabase } from '@/lib/mongodb';
 import { AuthUtils } from '@/lib/auth-utils';
 import { ObjectId } from 'mongodb';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 

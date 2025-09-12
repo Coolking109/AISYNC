@@ -6,6 +6,10 @@ import { ResetPasswordRequest } from '@/lib/auth-types';
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://coresystembots_db_user:eXBLikJoEBqJUgcA@cluster0.diplw6a.mongodb.net/perplexity-chatbot';
 
 export async function POST(request: NextRequest) {

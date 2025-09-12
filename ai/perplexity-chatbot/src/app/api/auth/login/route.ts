@@ -6,6 +6,10 @@ import * as speakeasy from 'speakeasy';
 
 // Note: This route uses Node.js packages (MongoDB, speakeasy) so cannot use edge runtime
 
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password, twoFactorCode }: LoginRequest = await request.json();

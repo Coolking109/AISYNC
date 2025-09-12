@@ -6,6 +6,10 @@ import { AuthUtils } from '@/lib/auth-utils';
 // Note: This route uses MongoDB so cannot use edge runtime
 
 // Helper function to verify authentication
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 async function verifyAuth(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

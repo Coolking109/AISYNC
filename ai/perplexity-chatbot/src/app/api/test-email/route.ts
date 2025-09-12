@@ -4,6 +4,10 @@ import { EmailService } from '@/lib/email-service';
 // Note: This route uses Node.js packages and cannot use edge runtime
 
 
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Only allow in development mode

@@ -4,6 +4,10 @@ import { ChatMessage } from '@/lib/types';
 
 // Note: Removed edge runtime to fix build issues with AI SDKs
 
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Chat API: Received request');
