@@ -14,6 +14,12 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['mongodb', 'speakeasy', 'nodemailer', 'qrcode']
   },
+  // Logging configuration
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
   // Ignore build errors during development
   eslint: {
     ignoreDuringBuilds: true,
