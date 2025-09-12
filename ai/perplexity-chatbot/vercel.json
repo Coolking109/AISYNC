@@ -6,7 +6,7 @@
   "outputDirectory": ".next",
   "functions": {
     "src/app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 60
     }
   },
   "headers": [
@@ -27,5 +27,8 @@
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
