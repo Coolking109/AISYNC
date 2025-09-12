@@ -2,7 +2,7 @@
 
 # Build settings
 [build]
-  command = "npm run build:cloudflare"
+  command = "npm install && npm run build"
   publish = ".next"
 
 # Environment settings  
@@ -11,6 +11,6 @@
   NPM_CONFIG_PRODUCTION = "false"
   NEXT_TELEMETRY_DISABLED = "1"
 
-# Functions settings
+# Functions settings for Next.js API routes
 [functions]
   node_compat = true

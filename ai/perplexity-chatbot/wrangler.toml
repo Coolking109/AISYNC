@@ -1,1 +1,28 @@
+# Cloudflare Pages Configuration
 
+name = "aisync-chatbot"
+compatibility_date = "2024-03-18"
+
+[env.production]
+compatibility_date = "2024-03-18"
+
+# Pages configuration
+pages_build_output_dir = ".next"
+
+# Environment variables (set these in Cloudflare dashboard)
+[env.production.vars]
+NEXT_PUBLIC_APP_URL = "https://aisyncs.org"
+NODE_ENV = "production"
+
+# Functions configuration for API routes
+[[env.production.services]]
+binding = "DATABASE"
+service = "mongodb-service"
+
+# Build configuration
+[build]
+command = "npm run build"
+cwd = "."
+
+# Compatibility flags for newer features
+compatibility_flags = ["nodejs_compat"]
