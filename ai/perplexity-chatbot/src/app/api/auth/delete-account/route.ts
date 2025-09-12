@@ -8,7 +8,10 @@ import { ObjectId } from 'mongodb';
 
 
 // Force dynamic rendering for this API route
+
+// Force dynamic rendering - prevent static optimization
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function DELETE(request: NextRequest) {
   try {

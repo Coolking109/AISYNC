@@ -5,6 +5,7 @@ import { ObjectId } from 'mongodb';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // Note: This route uses Node.js packages and cannot use edge runtime
 

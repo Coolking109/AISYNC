@@ -8,7 +8,10 @@ import { AuthUtils } from '@/lib/auth-utils';
 // Helper function to verify authentication
 
 // Force dynamic rendering for this API route
+
+// Force dynamic rendering - prevent static optimization
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function verifyAuth(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');

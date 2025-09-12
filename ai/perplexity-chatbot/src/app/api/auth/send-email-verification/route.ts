@@ -10,7 +10,10 @@ import nodemailer from 'nodemailer';
 // Generate a 6-digit verification code
 
 // Force dynamic rendering for this API route
+
+// Force dynamic rendering - prevent static optimization
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();

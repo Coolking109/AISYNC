@@ -9,7 +9,10 @@ import { ForgotPasswordRequest } from '@/lib/auth-types';
 
 
 // Force dynamic rendering for this API route
+
+// Force dynamic rendering - prevent static optimization
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://coresystembots_db_user:eXBLikJoEBqJUgcA@cluster0.diplw6a.mongodb.net/perplexity-chatbot';
 
