@@ -7,17 +7,15 @@ const nextConfig = {
     COHERE_API_KEY: process.env.COHERE_API_KEY,
     MISTRAL_API_KEY: process.env.MISTRAL_API_KEY,
   },
-  // Cloudflare Pages specific configuration
-  trailingSlash: true,
+  // Cloudflare Pages optimizations
   images: {
     unoptimized: true,
   },
-  // Remove experimental edge runtime for now as it may cause issues
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 }
 
