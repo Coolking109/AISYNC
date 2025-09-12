@@ -43,12 +43,24 @@ export async function POST(request: NextRequest) {
     const multiModelAI = new MultiModelAI();
     
     let result;
+    
+    // Add timeout wrapper for AI operations
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('AI request timeout')), 45000)
+    );
+    
     if (modelSelection?.mode === 'single' && modelSelection.selectedModel) {
       console.log('Chat API: Querying single model:', modelSelection.selectedModel);
-      result = await multiModelAI.querySingleModel(messages, modelSelection.selectedModel, userLanguage);
+      result = await Promise.race([
+        multiModelAI.querySingleModel(messages, modelSelection.selectedModel, userLanguage),
+        timeoutPromise
+      ]);
     } else {
       console.log('Chat API: Querying all models...');
-      result = await multiModelAI.queryAllModels(messages, userLanguage);
+      result = await Promise.race([
+        multiModelAI.queryAllModels(messages, userLanguage),
+        timeoutPromise
+      ]);
     }
     
     console.log('Chat API: Got result with', result.responses?.length || 0, 'responses');
@@ -57,6 +69,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('Chat API error:', error);
+    
+    // Handle timeout specifically
+    if (error instanceof Error && error.message === 'AI request timeout') {
+      return NextResponse.json(
+        { 
+          error: 'Request timeout - AI models are taking too long to respond. Please try a shorter message or try again later.',
+          timeout: true
+        },
+        { status: 504 }
+      );
+    }
+    
     return NextResponse.json(
       { 
         error: 'Internal server error',
