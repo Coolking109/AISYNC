@@ -11,6 +11,7 @@
   NPM_CONFIG_PRODUCTION = "false"
   NEXT_TELEMETRY_DISABLED = "1"
 
-# Functions settings for Next.js API routes
+# Functions settings for Next.js API routes with edge runtime
 [functions]
   node_compat = true
+  compatibility_date = "2024-03-18"
