@@ -7,42 +7,39 @@ const nextConfig = {
     COHERE_API_KEY: process.env.COHERE_API_KEY,
     MISTRAL_API_KEY: process.env.MISTRAL_API_KEY,
   },
-  // Cloudflare Pages configuration
+  // Edge runtime configuration
   images: {
     unoptimized: true,
   },
-  // Webpack configuration for problematic packages
-  webpack: (config, { isServer }) => {
-    // Ignore problematic packages during client-side builds
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-        crypto: false,
-        stream: false,
-        url: false,
-        zlib: false,
-        http: false,
-        https: false,
-        assert: false,
-        os: false,
-        path: false,
-      };
+  // Webpack config for edge runtime
+  webpack: (config, { isServer, nextRuntime }) => {
+    if (nextRuntime === 'edge') {
+      return config;
     }
     
-    // Ignore specific problematic modules
-    config.externals = config.externals || [];
-    config.externals.push({
-      'speakeasy': 'speakeasy',
-      'qrcode': 'qrcode',
-      'nodemailer': 'nodemailer',
-    });
+    // For edge runtime, exclude Node.js modules
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+      crypto: false,
+      stream: false,
+      util: false,
+      url: false,
+      querystring: false,
+      path: false,
+      os: false,
+    };
     
     return config;
   },
-  // Ignore build errors temporarily
+  // Experimental edge features
+  experimental: {
+    runtime: 'edge',
+    serverComponentsExternalPackages: []
+  },
+  // Ignore build errors during transition
   eslint: {
     ignoreDuringBuilds: true,
   },
