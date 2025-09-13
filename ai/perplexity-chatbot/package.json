@@ -8,6 +8,7 @@
     "build:cloudflare": "npm install && next build",
     "start": "next start",
     "lint": "next lint",
+    "deploy:prod": "node deploy-production.js",
     "aisync-learn": "node scripts/aisync-learn.js",
     "aisync-continuous": "node scripts/aisync-learn.js --continuous"
   },
