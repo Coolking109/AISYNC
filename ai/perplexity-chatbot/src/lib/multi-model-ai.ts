@@ -24,7 +24,7 @@
  * that the data should not be used for model training purposes.
  */
 
-import OpenAI from 'openai';
+import OpenAI, { OpenAIClient } from './openai-wrapper';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Anthropic from '@anthropic-ai/sdk';
 import axios from 'axios';
@@ -33,7 +33,7 @@ import { SelfDevelopingAI } from './self-developing-ai';
 import { LearningAI } from './learning-ai';
 
 export class MultiModelAI {
-  private openai: OpenAI | null = null;
+  private openai: OpenAIClient | null = null;
   private google: GoogleGenerativeAI | null = null;
   private anthropic: Anthropic | null = null;
 

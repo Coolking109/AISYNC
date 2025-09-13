@@ -1,7 +1,6 @@
 import { MongoClient, Db } from 'mongodb';
 
 const MONGODB_URI = process.env.MONGODB_URI!;
-// Extract database name from URI if present, otherwise use default
 const DB_NAME = 'perplexity-chatbot';
 
 let client: MongoClient | null = null;

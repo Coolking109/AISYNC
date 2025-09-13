@@ -23,7 +23,7 @@ export class EmailService {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASSWORD,
         },
-        from: 'AISync <noreply@aisync.com>', // Set default from name
+        from: process.env.SMTP_FROM || 'AISync <noreply@aisync.dev>', // Use environment variable
       });
 
       console.log('✅ Email service configured successfully for:', process.env.EMAIL_USER);
@@ -42,8 +42,8 @@ export class EmailService {
       }
       
       const mailOptions = {
-        from: 'AISync Security <noreply@aisync.com>',
-        replyTo: 'support@aisync.com',
+        from: process.env.SMTP_FROM || 'AISync Security <noreply@aisync.dev>',
+        replyTo: 'support@aisync.dev',
         to: email,
         subject: 'Welcome to AISync! 🎉',
         html: `
@@ -346,8 +346,8 @@ This email was sent to ${email} because you created an AISync account.
       const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
       
       const mailOptions = {
-        from: 'AISync Security <noreply@aisync.com>',
-        replyTo: 'noreply@aisync.com',
+        from: process.env.SMTP_FROM || 'AISync Security <noreply@aisync.dev>',
+        replyTo: 'noreply@aisync.dev',
         to: email,
         subject: 'Reset Your AISync Password 🔒',
         html: `
