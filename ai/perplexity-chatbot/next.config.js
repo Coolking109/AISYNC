@@ -1,25 +1,65 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  env: {
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
-    GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
-    COHERE_API_KEY: process.env.COHERE_API_KEY,
-    MISTRAL_API_KEY: process.env.MISTRAL_API_KEY,
-  },
+  // Remove env section - use Vercel environment variables instead
   images: {
     unoptimized: true,
+    domains: ['aisync.dev'],
   },
-  // Experimental settings for better dynamic handling
+  // Optimized settings for Vercel deployment
   experimental: {
-    serverComponentsExternalPackages: ['mongodb', 'speakeasy', 'nodemailer', 'qrcode']
+    serverComponentsExternalPackages: ['mongodb', 'speakeasy', 'nodemailer', 'qrcode'],
+    // Optimize for serverless functions
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
-  // Ignore build errors during development
+  // Production optimizations
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false, // Enable linting in production
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false, // Enable type checking in production
+  },
+  // Vercel-specific optimizations
+  output: 'standalone',
+  poweredByHeader: false,
+  compress: true,
+  // API route optimizations
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+    responseLimit: '8mb',
+  },
+  // Webpack optimizations for serverless
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Optimize server-side bundles
+      config.externals.push('_http_common');
+      
+      // Reduce bundle size for AI SDKs
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@anthropic-ai/sdk': require.resolve('@anthropic-ai/sdk'),
+        'openai': require.resolve('openai'),
+        '@google/generative-ai': require.resolve('@google/generative-ai'),
+      };
+    }
+    
+    // Optimize chunk sizes
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      },
+    };
+    
+    return config;
   },
 }
 

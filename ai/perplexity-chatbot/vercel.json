@@ -5,18 +5,28 @@
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "functions": {
-    "src/app/api/**/*.ts": {
-      "maxDuration": 60,
-      "memory": 1024
+    "src/app/api/chat/route.ts": {
+      "maxDuration": 30,
+      "memory": 512
+    },
+    "src/app/api/*/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
     }
   },
+  "crons": [
+    {
+      "path": "/api/cleanup",
+      "schedule": "0 2 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://aisyncs.org"
+          "value": "https://aisync.dev"
         },
         {
           "key": "Access-Control-Allow-Methods",
@@ -29,6 +39,10 @@
         {
           "key": "Access-Control-Allow-Credentials",
           "value": "true"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     },
@@ -50,19 +64,19 @@
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
         }
       ]
     }
   ],
-  "env": {
-    "NODE_ENV": "production",
-    "VERCEL_ENV": "production"
-  },
-  "regions": ["iad1"],
-  "builds": [
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/node"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     }
-  ]
+  ],
+  "regions": ["iad1"]
 }
