@@ -127,34 +127,45 @@ export const useSessionManager = () => {
   };
 
   const createNewSession = async (firstMessage?: string): Promise<string> => {
-    // Only create persistent sessions for authenticated users
+    console.log('Creating new session, user:', user ? 'authenticated' : 'guest');
+    
+    // Always create a temporary session first for immediate use
+    const tempSessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    const tempSession: ChatSession = {
+      id: tempSessionId,
+      name: generateSessionName(firstMessage),
+      messageCount: 0,
+      messages: [],
+      createdAt: new Date(),
+    };
+    
+    // Add to local state immediately for better UX
+    setSessions(prev => [tempSession, ...prev]);
+    setCurrentSessionId(tempSessionId);
+    console.log('Created temporary session:', tempSessionId);
+
+    // For guests, stop here - just use the temporary session
     if (!user) {
-      // For guests, create a temporary session in state only
-      const tempSessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-      const tempSession: ChatSession = {
-        id: tempSessionId,
-        name: generateSessionName(firstMessage),
-        messageCount: 0,
-        messages: [],
-        createdAt: new Date(),
-      };
-      setSessions(prev => [tempSession, ...prev]);
-      setCurrentSessionId(tempSessionId);
+      console.log('Guest session created successfully');
       return tempSessionId;
     }
 
+    // For authenticated users, try to persist to database but don't fail if it doesn't work
     const token = localStorage.getItem('auth-token');
     if (!token) {
-      throw new Error('Authentication required to create sessions');
+      console.warn('No auth token found, using temporary session');
+      return tempSessionId;
     }
 
     const sessionData = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      id: tempSessionId,
       name: generateSessionName(firstMessage),
       messageCount: 0,
       messages: [],
       userId: user._id || user.email,
     };
+
+    console.log('Attempting to persist session to database...');
 
     try {
       const response = await fetch('/api/sessions', {
@@ -166,25 +177,34 @@ export const useSessionManager = () => {
         body: JSON.stringify(sessionData),
       });
 
+      console.log('Session persistence response:', response.status, response.ok);
+
       if (response.ok) {
-        const newSession = await response.json();
-        const session: ChatSession = {
-          ...newSession,
-          id: newSession._id || newSession.id,
-          createdAt: new Date(newSession.createdAt),
-        };
-        setSessions(prev => [session, ...prev]);
-        setCurrentSessionId(session.id);
-        return session.id;
-      } else if (response.status === 401) {
-        throw new Error('Authentication required to create sessions');
+        const persistedSession = await response.json();
+        console.log('Session persisted successfully:', persistedSession);
+        
+        // Update the session with the MongoDB _id
+        setSessions(prev => 
+          prev.map(session => 
+            session.id === tempSessionId 
+              ? { ...session, _id: persistedSession._id }
+              : session
+          )
+        );
+        
+        return tempSessionId; // Still return the same ID for consistency
       } else {
-        throw new Error('Failed to create session');
+        const errorText = await response.text();
+        console.warn('Session persistence failed, continuing with temporary session:', response.status, errorText);
+        // Don't throw error - just continue with temporary session
       }
     } catch (error) {
-      console.error('Error creating session:', error);
-      throw error;
+      console.warn('Error persisting session, continuing with temporary session:', error);
+      // Don't throw error - just continue with temporary session
     }
+
+    // Return the temporary session ID regardless of persistence success/failure
+    return tempSessionId;
   };
 
   const selectSession = (sessionId: string) => {
@@ -322,11 +342,20 @@ export const useSessionManager = () => {
       )
     );
 
-    // Only save to database for authenticated users
+    // Only attempt to save to database for authenticated users with valid tokens
     if (!user) return;
 
     const token = localStorage.getItem('auth-token');
-    if (!token) return;
+    if (!token) {
+      console.warn('No auth token available, session changes saved locally only');
+      return;
+    }
+
+    // Only try to persist if session has a database ID
+    if (!session._id) {
+      console.warn('Session has no database ID, skipping database update');
+      return;
+    }
 
     try {
       const response = await fetch('/api/sessions', {
@@ -339,10 +368,13 @@ export const useSessionManager = () => {
       });
 
       if (!response.ok) {
-        console.error('Error updating session messages in database');
+        console.warn('Failed to update session in database, but local state updated:', response.status);
+        // Don't throw error - local state is already updated for better UX
+      } else {
+        console.log('Session updated successfully in database');
       }
     } catch (error) {
-      console.error('Error updating session messages:', error);
+      console.warn('Error updating session in database, but local state updated:', error);
       // Local state is already updated, so no rollback needed for better UX
     }
   };
