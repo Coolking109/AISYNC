@@ -54,10 +54,15 @@ export const ChatInterface: React.FC = () => {
 
   const handleFeedback = async (messageId: string, feedback: 'positive' | 'negative' | 'neutral') => {
     try {
-      // Find the message to get the question context
+      // Find the message to get the response content and question context
       const message = messages.find(m => m.id === messageId);
       const userMessages = messages.filter(m => m.role === 'user');
       const lastUserMessage = userMessages[userMessages.length - 1];
+      
+      // Get recent conversation context (last 3 messages for context)
+      const recentContext = messages.slice(-3).map(m => 
+        `${m.role}: ${m.content}`
+      ).join('\n');
       
       const response = await fetch('/api/ai-feedback', {
         method: 'POST',
@@ -67,7 +72,9 @@ export const ChatInterface: React.FC = () => {
         body: JSON.stringify({
           messageId,
           feedback,
-          question: lastUserMessage?.content || ''
+          question: lastUserMessage?.content || '',
+          response: message?.content || '', // AI response content for Mistral training
+          context: recentContext // Conversation context for better training
         }),
       });
 
@@ -145,6 +152,45 @@ export const ChatInterface: React.FC = () => {
   }, [showUserDropdown]);
 
 
+
+  // Handle creating a new chat session
+  const handleNewChat = async () => {
+    try {
+      // Clear current chat state
+      setMessages([]);
+      setResponses(null);
+      setSelectedResponse(null);
+      setSelectedResponseIds(new Set());
+      setInput('');
+      setAttachments([]);
+      
+      // Create new session
+      const newSessionId = await createNewSession();
+      console.log('New chat session created:', newSessionId);
+    } catch (error) {
+      console.error('Failed to create new chat:', error);
+      // Show specific error message to user
+      let errorMessage = 'Failed to create new chat session. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Authentication')) {
+          errorMessage = 'Authentication required. Please log in and try again.';
+        } else if (error.message.includes('connection')) {
+          errorMessage = 'Unable to connect to server. Please check your internet connection.';
+        } else if (error.message.includes('database')) {
+          errorMessage = 'Database connection error. Please try again in a moment.';
+        }
+      }
+      
+      setMessages([{
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: errorMessage,
+        timestamp: new Date(),
+        model: 'System'
+      }]);
+    }
+  };
 
   // Load messages when current session changes (but not when session content updates)
   useEffect(() => {
@@ -278,9 +324,20 @@ export const ChatInterface: React.FC = () => {
       try {
         sessionId = await createNewSession(); // Auto-renaming will be handled by updateSessionMessages
       } catch (error) {
-        console.log('Session creation failed (guest user):', error);
-        // For guests, continue without persistent sessions
-        sessionId = null;
+        console.error('Session creation failed:', error);
+        
+        // Show error message to user and stop processing
+        const errorMessage: ChatMessageType = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: error instanceof Error ? error.message : 'Failed to create session. Please try again.',
+          timestamp: new Date(),
+          model: 'System'
+        };
+        
+        setMessages(prev => [...prev, userMessage, errorMessage]);
+        setInput('');
+        return; // Don't proceed with chat if session creation failed
       }
     }
 
@@ -413,7 +470,7 @@ export const ChatInterface: React.FC = () => {
             sessions={sessions}
             currentSessionId={currentSessionId}
             onSessionSelect={selectSession}
-            onNewSession={() => createNewSession()}
+            onNewSession={handleNewChat}
             onDeleteSession={deleteSession}
             onRenameSession={renameSession}
           />
