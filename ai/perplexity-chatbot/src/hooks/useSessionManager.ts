@@ -129,43 +129,39 @@ export const useSessionManager = () => {
   const createNewSession = async (firstMessage?: string): Promise<string> => {
     console.log('Creating new session, user:', user ? 'authenticated' : 'guest');
     
-    // Always create a temporary session first for immediate use
-    const tempSessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-    const tempSession: ChatSession = {
-      id: tempSessionId,
-      name: generateSessionName(firstMessage),
-      messageCount: 0,
-      messages: [],
-      createdAt: new Date(),
-    };
-    
-    // Add to local state immediately for better UX
-    setSessions(prev => [tempSession, ...prev]);
-    setCurrentSessionId(tempSessionId);
-    console.log('Created temporary session:', tempSessionId);
-
-    // For guests, stop here - just use the temporary session
+    // For guests, create a temporary session in state only
     if (!user) {
-      console.log('Guest session created successfully');
+      const tempSessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      const tempSession: ChatSession = {
+        id: tempSessionId,
+        name: generateSessionName(firstMessage),
+        messageCount: 0,
+        messages: [],
+        createdAt: new Date(),
+      };
+      setSessions(prev => [tempSession, ...prev]);
+      setCurrentSessionId(tempSessionId);
+      console.log('Created temporary session for guest:', tempSessionId);
       return tempSessionId;
     }
 
-    // For authenticated users, try to persist to database but don't fail if it doesn't work
+    // For authenticated users, always try to create a persistent session in database
     const token = localStorage.getItem('auth-token');
     if (!token) {
-      console.warn('No auth token found, using temporary session');
-      return tempSessionId;
+      console.error('No auth token found for authenticated user');
+      throw new Error('Authentication required to create sessions. Please log in again.');
     }
 
+    const sessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
     const sessionData = {
-      id: tempSessionId,
+      id: sessionId,
       name: generateSessionName(firstMessage),
       messageCount: 0,
       messages: [],
       userId: user._id || user.email,
     };
 
-    console.log('Attempting to persist session to database...');
+    console.log('Creating persistent session in database...');
 
     try {
       const response = await fetch('/api/sessions', {
@@ -177,34 +173,40 @@ export const useSessionManager = () => {
         body: JSON.stringify(sessionData),
       });
 
-      console.log('Session persistence response:', response.status, response.ok);
+      console.log('Session creation response:', response.status, response.ok);
 
       if (response.ok) {
         const persistedSession = await response.json();
         console.log('Session persisted successfully:', persistedSession);
         
-        // Update the session with the MongoDB _id
-        setSessions(prev => 
-          prev.map(session => 
-            session.id === tempSessionId 
-              ? { ...session, _id: persistedSession._id }
-              : session
-          )
-        );
+        const session: ChatSession = {
+          ...persistedSession,
+          id: persistedSession._id || persistedSession.id,
+          createdAt: new Date(persistedSession.createdAt),
+        };
         
-        return tempSessionId; // Still return the same ID for consistency
+        setSessions(prev => [session, ...prev]);
+        setCurrentSessionId(session.id);
+        return session.id;
+      } else if (response.status === 401) {
+        console.error('Authentication failed during session creation');
+        // Clear invalid token
+        localStorage.removeItem('auth-token');
+        throw new Error('Authentication expired. Please log in again.');
       } else {
         const errorText = await response.text();
-        console.warn('Session persistence failed, continuing with temporary session:', response.status, errorText);
-        // Don't throw error - just continue with temporary session
+        console.error('Session creation failed:', response.status, errorText);
+        throw new Error(`Failed to create session: ${errorText}`);
       }
     } catch (error) {
-      console.warn('Error persisting session, continuing with temporary session:', error);
-      // Don't throw error - just continue with temporary session
+      console.error('Error creating session:', error);
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to server. Please check your internet connection.');
+      }
+      
+      throw error;
     }
-
-    // Return the temporary session ID regardless of persistence success/failure
-    return tempSessionId;
   };
 
   const selectSession = (sessionId: string) => {
@@ -212,50 +214,87 @@ export const useSessionManager = () => {
   };
 
   const deleteSession = async (sessionId: string) => {
-    if (!user) {
-      // For guests, just remove from state
+    console.log('Deleting session:', sessionId, 'User:', user ? 'authenticated' : 'guest');
+    
+    const sessionToDelete = sessions.find(s => s.id === sessionId);
+    if (!sessionToDelete) {
+      console.warn('Session not found in local state:', sessionId);
+      return;
+    }
+
+    // For guests or sessions without database IDs, just remove from local state
+    if (!user || !sessionToDelete._id) {
+      console.log('Deleting local session (guest or temporary)');
       setSessions(prev => prev.filter(session => session.id !== sessionId));
+      
       if (currentSessionId === sessionId) {
         const remainingSessions = sessions.filter(session => session.id !== sessionId);
         if (remainingSessions.length > 0) {
           setCurrentSessionId(remainingSessions[0].id);
         } else {
           setCurrentSessionId(null);
+          const sessionKey = getCurrentSessionKey();
+          localStorage.removeItem(sessionKey);
         }
       }
       return;
     }
 
+    // For authenticated users with persisted sessions, delete from database first
     const token = localStorage.getItem('auth-token');
-    if (!token) return;
+    if (!token) {
+      console.error('No auth token available for session deletion');
+      throw new Error('Authentication required to delete session. Please log in again.');
+    }
 
     try {
-      const session = sessions.find(s => s.id === sessionId);
-      const mongoId = session?._id || sessionId;
+      console.log('Deleting session from database, ID:', sessionToDelete._id);
       
-      const response = await fetch(`/api/sessions?id=${mongoId}`, {
+      const response = await fetch(`/api/sessions?id=${sessionToDelete._id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
+      console.log('Delete response:', response.status, response.ok);
+
       if (response.ok) {
-        setSessions(prev => prev.filter(session => session.id !== sessionId));
-        
-        if (currentSessionId === sessionId) {
-          const remainingSessions = sessions.filter(session => session.id !== sessionId);
-          if (remainingSessions.length > 0) {
-            setCurrentSessionId(remainingSessions[0].id);
-          } else {
-            setCurrentSessionId(null);
-            const sessionKey = getCurrentSessionKey();
-            localStorage.removeItem(sessionKey);
-          }
+        console.log('Session deleted successfully from database');
+      } else if (response.status === 401) {
+        console.error('Authentication failed during session deletion');
+        localStorage.removeItem('auth-token');
+        throw new Error('Authentication expired. Please log in again.');
+      } else if (response.status === 404) {
+        console.warn('Session not found in database, removing from local state anyway');
+      } else {
+        const errorText = await response.text();
+        console.error('Session deletion failed:', response.status, errorText);
+        throw new Error(`Failed to delete session: ${errorText}`);
+      }
+
+      // Remove from local state after successful database operation
+      setSessions(prev => prev.filter(session => session.id !== sessionId));
+      
+      if (currentSessionId === sessionId) {
+        const remainingSessions = sessions.filter(session => session.id !== sessionId);
+        if (remainingSessions.length > 0) {
+          setCurrentSessionId(remainingSessions[0].id);
+        } else {
+          setCurrentSessionId(null);
+          const sessionKey = getCurrentSessionKey();
+          localStorage.removeItem(sessionKey);
         }
       }
+      
     } catch (error) {
       console.error('Error deleting session:', error);
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to server. Please check your internet connection.');
+      }
+      
+      throw error;
     }
   };
 
@@ -342,19 +381,19 @@ export const useSessionManager = () => {
       )
     );
 
-    // Only attempt to save to database for authenticated users with valid tokens
+    // Only attempt to save to database for authenticated users
     if (!user) return;
 
     const token = localStorage.getItem('auth-token');
     if (!token) {
-      console.warn('No auth token available, session changes saved locally only');
-      return;
+      console.error('No auth token available for session update');
+      throw new Error('Authentication required to save session. Please log in again.');
     }
 
-    // Only try to persist if session has a database ID
+    // Ensure we have a database ID before trying to update
     if (!session._id) {
-      console.warn('Session has no database ID, skipping database update');
-      return;
+      console.error('Session has no database ID, cannot update in database');
+      throw new Error('Session not found in database. Please create a new session.');
     }
 
     try {
@@ -368,14 +407,26 @@ export const useSessionManager = () => {
       });
 
       if (!response.ok) {
-        console.warn('Failed to update session in database, but local state updated:', response.status);
-        // Don't throw error - local state is already updated for better UX
+        const errorText = await response.text();
+        console.error('Failed to update session in database:', response.status, errorText);
+        
+        if (response.status === 401) {
+          localStorage.removeItem('auth-token');
+          throw new Error('Authentication expired. Please log in again.');
+        }
+        
+        throw new Error(`Failed to save session: ${errorText}`);
       } else {
         console.log('Session updated successfully in database');
       }
     } catch (error) {
-      console.warn('Error updating session in database, but local state updated:', error);
-      // Local state is already updated, so no rollback needed for better UX
+      console.error('Error updating session in database:', error);
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to server. Please check your internet connection.');
+      }
+      
+      throw error;
     }
   };
 
@@ -384,34 +435,53 @@ export const useSessionManager = () => {
   };
 
   const clearAllSessions = async () => {
+    console.log('Clearing all sessions, user:', user ? 'authenticated' : 'guest');
+    
+    // Always clear local state first for immediate UX
+    setSessions([]);
+    setCurrentSessionId(null);
+    const sessionKey = getCurrentSessionKey();
+    localStorage.removeItem(sessionKey);
+
     if (!user) {
-      // For guests, just clear state
-      setSessions([]);
-      setCurrentSessionId(null);
+      console.log('All guest sessions cleared from local state');
       return;
     }
 
     const token = localStorage.getItem('auth-token');
-    if (!token) return;
+    if (!token) {
+      console.warn('No auth token available, sessions cleared locally only');
+      return;
+    }
 
     try {
-      // Delete all sessions from MongoDB
-      for (const session of sessions) {
-        const mongoId = session._id || session.id;
-        await fetch(`/api/sessions?id=${mongoId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+      // Only delete persisted sessions from MongoDB (those with _id)
+      const persistedSessions = sessions.filter(session => session._id);
+      
+      if (persistedSessions.length === 0) {
+        console.log('No persisted sessions to delete from database');
+        return;
+      }
+
+      console.log(`Deleting ${persistedSessions.length} persisted sessions from database`);
+      
+      for (const session of persistedSessions) {
+        try {
+          await fetch(`/api/sessions?id=${session._id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+        } catch (error) {
+          console.warn(`Failed to delete session ${session._id} from database:`, error);
+          // Continue with other sessions
+        }
       }
       
-      setSessions([]);
-      setCurrentSessionId(null);
-      const sessionKey = getCurrentSessionKey();
-      localStorage.removeItem(sessionKey);
+      console.log('All sessions cleared successfully');
     } catch (error) {
-      console.error('Error clearing all sessions:', error);
+      console.warn('Error clearing sessions from database, but cleared locally:', error);
     }
   };
 
