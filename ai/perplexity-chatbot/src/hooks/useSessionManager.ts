@@ -83,7 +83,13 @@ export const useSessionManager = () => {
 
     try {
       setIsLoading(true);
-      if (!token) {
+      let authToken = token;
+      if (!authToken && user) {
+        // Fallback: try to get token from localStorage if useAuth hasn't loaded it yet
+        authToken = localStorage.getItem('auth_token');
+      }
+      
+      if (!authToken) {
         console.log('No token, clearing sessions');
         setSessions([]);
         return;
@@ -95,7 +101,7 @@ export const useSessionManager = () => {
       
       const response = await fetch(`/api/sessions?userId=${userId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -158,15 +164,6 @@ export const useSessionManager = () => {
   };
 
   const createNewSession = async (firstMessage?: string): Promise<string> => {
-    console.log('Creating new session, user:', user ? 'authenticated' : 'guest');
-    console.log('Token available:', !!token);
-    console.log('User object details:', { 
-      hasUser: !!user, 
-      userId: user?._id || user?.email,
-      hasToken: !!token,
-      tokenLength: token?.length || 0
-    });
-    
     // For guests, create a temporary session in state only
     if (!user) {
       const tempSessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -179,17 +176,17 @@ export const useSessionManager = () => {
       };
       setSessions(prev => [tempSession, ...prev]);
       setCurrentSessionId(tempSessionId);
-      console.log('Created temporary session for guest:', tempSessionId);
       return tempSessionId;
     }
 
     // For authenticated users, always try to create a persistent session in database
-    if (!token) {
-      console.error('No auth token found for authenticated user');
-      console.log('Checking localStorage for token:', {
-        auth_token: localStorage.getItem('auth_token')?.substring(0, 20) + '...',
-        auth_user: !!localStorage.getItem('auth_user')
-      });
+    let authToken = token;
+    if (!authToken && user) {
+      // Fallback: try to get token from localStorage if useAuth hasn't loaded it yet
+      authToken = localStorage.getItem('auth_token');
+    }
+    
+    if (!authToken) {
       throw new Error('Authentication required to create sessions. Please log in again.');
     }
 
@@ -211,7 +208,7 @@ export const useSessionManager = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify(sessionData),
       });
