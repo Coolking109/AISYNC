@@ -17,7 +17,7 @@ export interface ChatSession {
 const CURRENT_SESSION_KEY = 'perplexity-current-session';
 
 export const useSessionManager = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth(); // Get token directly from auth context
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,49 +29,70 @@ export const useSessionManager = () => {
 
   // Load sessions from MongoDB on mount or user change
   useEffect(() => {
-    if (user) {
-      // Only load sessions for authenticated users
+    console.log('Session loading effect triggered:', { user: !!user, token: !!token });
+    
+    if (user && token) {
+      // Only load sessions for authenticated users with valid tokens
+      console.log('Loading sessions for authenticated user');
       loadSessions();
       const sessionKey = getCurrentSessionKey();
       const savedCurrentSession = localStorage.getItem(sessionKey);
+      console.log('Saved current session ID from localStorage:', savedCurrentSession);
       if (savedCurrentSession) {
         setCurrentSessionId(savedCurrentSession);
       } else {
         setCurrentSessionId(null);
       }
     } else {
-      // For guests, clear sessions and use temporary state only
+      // For guests or users without tokens, clear sessions and use temporary state only
+      console.log('Clearing sessions - no user or token');
       setSessions([]);
       setCurrentSessionId(null);
       const guestSessionKey = `${CURRENT_SESSION_KEY}-guest`;
       localStorage.removeItem(guestSessionKey);
     }
-  }, [user]);
+  }, [user, token]); // Added token as dependency
 
   // Save current session ID to localStorage whenever it changes
   useEffect(() => {
-    if (currentSessionId) {
+    console.log('Session ID save effect triggered:', { 
+      currentSessionId, 
+      user: !!user, 
+      token: !!token 
+    });
+    
+    if (currentSessionId && user) { // Only save for authenticated users
       const sessionKey = getCurrentSessionKey();
       localStorage.setItem(sessionKey, currentSessionId);
+      console.log(`Saved session ID '${currentSessionId}' to localStorage key '${sessionKey}'`);
+    } else {
+      console.log('Not saving session ID:', { 
+        hasSessionId: !!currentSessionId, 
+        hasUser: !!user 
+      });
     }
-  }, [currentSessionId, user]);
+  }, [currentSessionId, user, token]); // Added token as dependency
 
   const loadSessions = async () => {
     // Only load sessions for authenticated users
     if (!user) {
+      console.log('No user, clearing sessions');
       setSessions([]);
       return;
     }
 
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('auth-token');
       if (!token) {
+        console.log('No token, clearing sessions');
         setSessions([]);
         return;
       }
 
       const userId = user._id || user.email;
+      console.log('Loading sessions for user:', userId);
+      console.log('User object:', { _id: user._id, email: user.email });
+      
       const response = await fetch(`/api/sessions?userId=${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -79,8 +100,12 @@ export const useSessionManager = () => {
         },
       });
       
+      console.log('Sessions API response:', response.status, response.ok);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Raw sessions data:', data);
+        
         const parsedSessions = data.map((session: any) => ({
           ...session,
           id: session._id || session.id,
@@ -90,11 +115,17 @@ export const useSessionManager = () => {
             timestamp: new Date(msg.timestamp)
           })) || []
         }));
+        
+        console.log('Parsed sessions:', parsedSessions.length, 'sessions loaded');
         setSessions(parsedSessions);
       } else if (response.status === 401) {
         // Authentication failed, clear sessions
+        console.log('Authentication failed, clearing sessions');
         setSessions([]);
-        localStorage.removeItem('auth-token');
+        // Don't clear token here as it's managed by auth context
+      } else {
+        console.error('Failed to load sessions:', response.status);
+        setSessions([]);
       }
     } catch (error) {
       console.error('Error loading sessions:', error);
@@ -128,6 +159,7 @@ export const useSessionManager = () => {
 
   const createNewSession = async (firstMessage?: string): Promise<string> => {
     console.log('Creating new session, user:', user ? 'authenticated' : 'guest');
+    console.log('Token available:', !!token);
     
     // For guests, create a temporary session in state only
     if (!user) {
@@ -146,22 +178,23 @@ export const useSessionManager = () => {
     }
 
     // For authenticated users, always try to create a persistent session in database
-    const token = localStorage.getItem('auth-token');
     if (!token) {
       console.error('No auth token found for authenticated user');
       throw new Error('Authentication required to create sessions. Please log in again.');
     }
 
     const sessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    const userId = user._id || user.email;
     const sessionData = {
       id: sessionId,
       name: generateSessionName(firstMessage),
       messageCount: 0,
       messages: [],
-      userId: user._id || user.email,
+      userId: userId,
     };
 
     console.log('Creating persistent session in database...');
+    console.log('Session userId being saved:', userId);
 
     try {
       const response = await fetch('/api/sessions', {
@@ -190,8 +223,7 @@ export const useSessionManager = () => {
         return session.id;
       } else if (response.status === 401) {
         console.error('Authentication failed during session creation');
-        // Clear invalid token
-        localStorage.removeItem('auth-token');
+        // Don't clear token here as it's managed by auth context
         throw new Error('Authentication expired. Please log in again.');
       } else {
         const errorText = await response.text();
@@ -241,7 +273,6 @@ export const useSessionManager = () => {
     }
 
     // For authenticated users with persisted sessions, delete from database first
-    const token = localStorage.getItem('auth-token');
     if (!token) {
       console.error('No auth token available for session deletion');
       throw new Error('Authentication required to delete session. Please log in again.');
@@ -263,7 +294,7 @@ export const useSessionManager = () => {
         console.log('Session deleted successfully from database');
       } else if (response.status === 401) {
         console.error('Authentication failed during session deletion');
-        localStorage.removeItem('auth-token');
+        // Don't clear token here as it's managed by auth context
         throw new Error('Authentication expired. Please log in again.');
       } else if (response.status === 404) {
         console.warn('Session not found in database, removing from local state anyway');
@@ -311,7 +342,6 @@ export const useSessionManager = () => {
       return;
     }
 
-    const token = localStorage.getItem('auth-token');
     if (!token) return;
 
     try {
@@ -384,7 +414,6 @@ export const useSessionManager = () => {
     // Only attempt to save to database for authenticated users
     if (!user) return;
 
-    const token = localStorage.getItem('auth-token');
     if (!token) {
       console.error('No auth token available for session update');
       throw new Error('Authentication required to save session. Please log in again.');
@@ -411,7 +440,7 @@ export const useSessionManager = () => {
         console.error('Failed to update session in database:', response.status, errorText);
         
         if (response.status === 401) {
-          localStorage.removeItem('auth-token');
+          // Don't clear token here as it's managed by auth context
           throw new Error('Authentication expired. Please log in again.');
         }
         
@@ -448,7 +477,6 @@ export const useSessionManager = () => {
       return;
     }
 
-    const token = localStorage.getItem('auth-token');
     if (!token) {
       console.warn('No auth token available, sessions cleared locally only');
       return;
