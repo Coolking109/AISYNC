@@ -160,6 +160,12 @@ export const useSessionManager = () => {
   const createNewSession = async (firstMessage?: string): Promise<string> => {
     console.log('Creating new session, user:', user ? 'authenticated' : 'guest');
     console.log('Token available:', !!token);
+    console.log('User object details:', { 
+      hasUser: !!user, 
+      userId: user?._id || user?.email,
+      hasToken: !!token,
+      tokenLength: token?.length || 0
+    });
     
     // For guests, create a temporary session in state only
     if (!user) {
@@ -180,6 +186,10 @@ export const useSessionManager = () => {
     // For authenticated users, always try to create a persistent session in database
     if (!token) {
       console.error('No auth token found for authenticated user');
+      console.log('Checking localStorage for token:', {
+        auth_token: localStorage.getItem('auth_token')?.substring(0, 20) + '...',
+        auth_user: !!localStorage.getItem('auth_user')
+      });
       throw new Error('Authentication required to create sessions. Please log in again.');
     }
 
