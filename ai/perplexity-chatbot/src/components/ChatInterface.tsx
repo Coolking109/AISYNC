@@ -154,7 +154,7 @@ export const ChatInterface: React.FC = () => {
 
 
   // Handle creating a new chat session
-  const handleNewChat = async () => {
+  const handleNewChat = async (): Promise<void> => {
     try {
       // Clear current chat state
       setMessages([]);
@@ -167,6 +167,7 @@ export const ChatInterface: React.FC = () => {
       // Create new session
       const newSessionId = await createNewSession();
       console.log('New chat session created:', newSessionId);
+      // Don't return the session ID since Sidebar expects Promise<void>
     } catch (error) {
       console.error('Failed to create new chat:', error);
       // Show specific error message to user
