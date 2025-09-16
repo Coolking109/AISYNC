@@ -36,13 +36,33 @@ export async function GET(request: NextRequest) {
 
     const db = await getDatabase();
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || user._id || user.email;
+    const requestedUserId = searchParams.get('userId');
     
-    // Only fetch sessions for the authenticated user
+    // Use consistent userId logic: prefer _id, fallback to email
+    const authUserId = user._id || user.email;
+    
+    // If client provided a userId, verify it matches the authenticated user
+    const userId = requestedUserId || authUserId;
+    
+    // Debug: Check what we're searching for vs what user object has
+    console.log('API Sessions GET - User object:', { _id: user._id, email: user.email });
+    console.log('API Sessions GET - Auth userId:', authUserId);
+    console.log('API Sessions GET - Requested userId:', requestedUserId);
+    console.log('API Sessions GET - Final search userId:', userId);
+    
+    // Only fetch sessions for the authenticated user - search for both possible userIds
     const sessions = await db.collection('sessions')
-      .find({ userId })
+      .find({ 
+        $or: [
+          { userId: authUserId },
+          { userId: user.email },
+          { userId: user._id }
+        ].filter(condition => condition.userId) // Remove any undefined values
+      })
       .sort({ createdAt: -1 })
       .toArray();
+      
+    console.log('API Sessions GET - Found sessions:', sessions.length);
 
     return NextResponse.json(sessions);
   } catch (error) {
@@ -68,13 +88,23 @@ export async function POST(request: NextRequest) {
     const sessionData = await request.json();
     const db = await getDatabase();
     
+    // Use consistent userId logic: prefer _id, fallback to email
+    const authUserId = user._id || user.email;
+    
+    // Debug: Check what user object we have in API
+    console.log('API Sessions POST - User object:', { _id: user._id, email: user.email });
+    console.log('API Sessions POST - Auth userId:', authUserId);
+    console.log('API Sessions POST - Received userId from client:', sessionData.userId);
+    
     // Ensure session is associated with authenticated user
     const session = {
       ...sessionData,
-      userId: user._id || user.email,
+      userId: authUserId, // Use consistent logic
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+    
+    console.log('API Sessions POST - Final userId being saved:', session.userId);
 
     const result = await db.collection('sessions').insertOne(session);
     
