@@ -154,7 +154,7 @@ export const ChatInterface: React.FC = () => {
 
 
   // Handle creating a new chat session
-  const handleNewChat = async () => {
+  const handleNewChat: () => Promise<void> = async () => {
     try {
       // Clear current chat state
       setMessages([]);
